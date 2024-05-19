@@ -9,15 +9,17 @@ root = ET.fromstring(response.text)
 
 header = ["Name","sigun","Area","Material","x","y"]
 
-baseball_dicts=dict()
-for item in root.iter("row"):
-    name=item.findtext("FACLT_NM")
-    area=item.findtext("AR")
-    material=item.findtext("INFLD_BOTM_MATRL_NM")
-    x=item.findtext("REFINE_WGS84_LAT")
-    y=item.findtext("REFINE_WGS84_LOGT")
-    sigun=item.findtext("SIGUN_NM")
-    baseball_dicts[name]=[sigun,area,material,x,y]
+class BaseBall():
+    baseball_lists=list()
+    for item in root.iter("row"):
+        name=item.findtext("FACLT_NM")
+        area=item.findtext("AR")
+        material=item.findtext("INFLD_BOTM_MATRL_NM")
+        x=item.findtext("REFINE_WGS84_LAT")
+        y=item.findtext("REFINE_WGS84_LOGT")
+        sigun=item.findtext("SIGUN_NM")
+        baseball_lists.append([name, sigun, area, material, x, y])
+
 
 
 
