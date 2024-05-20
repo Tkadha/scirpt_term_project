@@ -1,5 +1,5 @@
 from tkinter import *
-
+from tkinter import ttk
 
 class MainGUI():
     def __init__(self):
@@ -19,13 +19,23 @@ class MainGUI():
         self.search_button = Button(self.search_frame, text='검색', command=self.search)
         self.search_button.place(x=300, y=0, width=50, height=25)
 
+        ##
+        # 탭 컨트롤 생성 및 배치
+        self.tab_control = ttk.Notebook(self.window)
+        self.tab_control.place(x=0, y=28, width=320, height=150)
+
+        ##
+        # 검색 결과 탭 생성
+        self.results_tab = Frame(self.tab_control)
+        self.tab_control.add(self.results_tab, text='검색 결과')
+
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
         self.info_canvas = Canvas(self.search_frame, width=300, height=250, bg='white')
         self.info_canvas.place(x=400, y=50, width=300, height=250)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
-        self.container_frame.place(x=0, y=28, width=320, height=250)
+        self.container_frame.place(x=0, y=56, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
         self.results_frame = Frame(self.container_frame)
@@ -47,9 +57,19 @@ class MainGUI():
         self.canvas.place(x=0, y=0, width=300, height=250)
         self.scrollbar.place(x=300, y=0, width=20, height=250)
 
-        # # 선택된 정보를 표시할 프레임 (컨테이너 프레임 내부)
+        # 선택된 정보를 표시할 프레임 (컨테이너 프레임 내부)
         # self.selection_frame = Frame(self.container_frame, width=250)
         # self.selection_frame.grid(row=0, column=2, sticky="nsew")
+
+        ##
+        # 선택된 정보를 표시할 탭 생성
+        self.selection_tab = Frame(self.tab_control)
+        self.tab_control.add(self.selection_tab, text='즐겨 찾기')
+
+        ##
+        # 선택된 정보를 표시할 프레임 (선택 탭 내부)
+        self.selection_frame = Frame(self.selection_tab, width=250)
+        self.selection_frame.grid(row=0, column=0, sticky="nsew")
 
         # 검색 결과 목록 초기화
         self.search_results = []
