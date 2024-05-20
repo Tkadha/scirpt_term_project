@@ -9,26 +9,29 @@ class MainGUI():
 
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.window)
-        self.search_frame.grid(row=0,column=0,sticky="ew")
+        self.search_frame.place(x=0, y=0, width=400, height=400)
 
         # 검색창과 검색 버튼 설정
         self.search_var = StringVar()
-        self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=50)
-        self.search_entry.grid(row=0, column=0, padx=(10, 0), pady=(10, 0))
+        self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
+        self.search_entry.place(x=0, y=0, width=300, height=25)
 
         self.search_button = Button(self.search_frame, text='검색', command=self.search)
-        self.search_button.grid(row=0, column=1, padx=(10, 0), pady=(10, 0))
+        self.search_button.place(x=300, y=0, width=50, height=25)
+
+        # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
+        self.info_canvas = Canvas(self.search_frame, width=300, height=250, bg='white')
+        self.info_canvas.place(x=400, y=50, width=300, height=250)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
-        self.container_frame.grid(row=1, column=0, sticky="nsew")
+        self.container_frame.place(x=0, y=28, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
-        self.results_frame = Frame(self.container_frame, width=350, height=300)
-        self.container_frame.columnconfigure(0, minsize=10)
-        self.results_frame.grid(row=0, column=1, sticky="nw")
+        self.results_frame = Frame(self.container_frame)
+        self.results_frame.place(x=0, y=0, width=320, height=250)
 
-        self.canvas = Canvas(self.results_frame, bg='white', width=350, height=300, scrollregion=(0, 0, 350, 300))
+        self.canvas = Canvas(self.results_frame, bg='white', width=350, height=225, scrollregion=(0, 0, 350, 225))
         self.scrollbar = Scrollbar(self.results_frame, orient='vertical', command=self.canvas.yview)
         self.scrollable_frame = Frame(self.canvas)
 
@@ -38,16 +41,15 @@ class MainGUI():
                 scrollregion=self.canvas.bbox("all")
             )
         )
-
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        self.canvas.grid(row=0, column=0, sticky="nsew")
-        self.scrollbar.grid(row=0, column=1, sticky="ns")
+        self.canvas.place(x=0, y=0, width=300, height=250)
+        self.scrollbar.place(x=300, y=0, width=20, height=250)
 
-        # 선택된 정보를 표시할 프레임 (컨테이너 프레임 내부)
-        self.selection_frame = Frame(self.container_frame, width=250)
-        self.selection_frame.grid(row=0, column=2, sticky="nsew")
+        # # 선택된 정보를 표시할 프레임 (컨테이너 프레임 내부)
+        # self.selection_frame = Frame(self.container_frame, width=250)
+        # self.selection_frame.grid(row=0, column=2, sticky="nsew")
 
         # 검색 결과 목록 초기화
         self.search_results = []
@@ -68,7 +70,7 @@ class MainGUI():
             widget.destroy()
 
         # 새로운 검색 결과 표시, 최대 10개
-        for result in results[:10]:
+        for result in results:
             label = Label(self.scrollable_frame, text=result)
             label.pack(anchor='w')
 
