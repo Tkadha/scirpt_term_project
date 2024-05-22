@@ -35,12 +35,14 @@ class MainGUI():
         self.tab_control.add(self.results_tab, text='검색 결과')
 
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
-        self.info_canvas = Canvas(self.window, bg='white', width=300, height=250)
-        self.info_canvas.place(x=310, y=58, width=300, height=250)
+        # self.info_canvas = Canvas(self.window, bg='white', width=300, height=250)
+        # self.info_canvas.place(x=350, y=58, width=300, height=250)
+        self.text_widget = Text(self.window, width=40, height=20, state="disabled")
+        self.text_widget.place(x=400, y=50)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
-        self.container_frame.place(x=0, y=56, width=320, height=250)
+        self.container_frame.place(x=0, y=50, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
         self.results_frame = Frame(self.container_frame)
@@ -97,10 +99,24 @@ class MainGUI():
         # 새로운 검색 결과 표시, 최대 10개
         for result in results:
             label = Label(self.scrollable_frame, text=result)
+            label.bind("<Button-1>", lambda event, result=result: self.show_selection(result))
             label.pack(anchor='w')
 
     def show_selection(self, selection):
         # 선택된 정보 표시
+        for info in self.All_list:
+            if selection == info[0]:
+                self.text_widget.config(state="normal")
+                self.text_widget.delete("1.0","end")
+                self.text_widget.insert("1.0","시설명: "+info[0]+"\n" +
+                                        "지역: "+info[1]+"\n" +
+                                        "면적: "+info[2]+"\n" +
+                                        "바닥 재질: "+info[3]+"\n" +
+                                        "위도: "+info[4]+"\n" +
+                                        "경도: "+info[5]+"\n")
+                self.text_widget.config(state="disabled")
+
+
         for widget in self.selection_frame.winfo_children():
             widget.destroy()
 
