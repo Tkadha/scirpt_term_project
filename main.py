@@ -8,7 +8,7 @@ class MainGUI():
     def __init__(self):
         self.All_list=BaseBall.baseball_lists+Soccer.soccer_lists+Tennis.tennis_lists
         self.All_list=sorted(self.All_list,key=lambda x:x[0])
-        
+
         self.window = Tk()
         self.window.title("Sport Finder")
         self.window.geometry("800x800")
@@ -83,12 +83,13 @@ class MainGUI():
 
     def search(self):
         query = self.search_var.get()
-        print(f"검색: {query}")
-        # 검색 로직 구현 필요
-        # 예시 결과
-        example_results = [f"결과 {i}" for i in range(1, 21)]  # 20개의 가짜 결과
 
-        self.update_results(example_results)
+        results=list()
+        for info in self.All_list:
+            if query in info[1]:
+                results.append(info[0])
+
+        self.update_results(results)
 
     def update_results(self, results):
         # 기존 검색 결과 삭제
