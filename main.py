@@ -11,6 +11,7 @@ class MainGUI():
         self.search_frame = Frame(self.window)
         self.search_frame.place(x=0, y=0, width=400, height=400)
 
+
         # 검색창과 검색 버튼 설정
         self.search_var = StringVar()
         self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
@@ -19,19 +20,17 @@ class MainGUI():
         self.search_button = Button(self.search_frame, text='검색', command=self.search)
         self.search_button.place(x=300, y=0, width=50, height=25)
 
-        ##
         # 탭 컨트롤 생성 및 배치
         self.tab_control = ttk.Notebook(self.window)
         self.tab_control.place(x=0, y=28, width=320, height=150)
 
-        ##
         # 검색 결과 탭 생성
         self.results_tab = Frame(self.tab_control)
         self.tab_control.add(self.results_tab, text='검색 결과')
 
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
-        self.info_canvas = Canvas(self.search_frame, width=300, height=250, bg='white')
-        self.info_canvas.place(x=400, y=50, width=300, height=250)
+        self.info_canvas = Canvas(self.window, bg='white', width=300, height=250)
+        self.info_canvas.place(x=310, y=58, width=300, height=250)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
@@ -61,7 +60,6 @@ class MainGUI():
         # self.selection_frame = Frame(self.container_frame, width=250)
         # self.selection_frame.grid(row=0, column=2, sticky="nsew")
 
-        ##
         # 선택된 정보를 표시할 탭 생성
         self.selection_tab = Frame(self.tab_control)
         self.tab_control.add(self.selection_tab, text='즐겨 찾기')
