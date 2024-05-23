@@ -112,6 +112,7 @@ class MainGUI():
                                         "지역: "+info[1]+"\n" +
                                         "면적: "+info[2]+"\n" +
                                         "바닥 재질: "+info[3]+"\n" +
+                                        "주소: " + info[6] + "\n" +
                                         "위도: "+info[4]+"\n" +
                                         "경도: "+info[5]+"\n")
                 self.text_widget.config(state="disabled")
