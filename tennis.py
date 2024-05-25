@@ -20,4 +20,5 @@ class Tennis():
         y = item.findtext("REFINE_WGS84_LOGT")
         sigun = item.findtext("SIGUN_NM")
         addr = item.findtext("REFINE_ROADNM_ADDR")
-        tennis_lists.append([name, sigun, area, material, x, y, addr])
+        if x != "":
+            tennis_lists.append([name, sigun, area, material, x, y, addr])

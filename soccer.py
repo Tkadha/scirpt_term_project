@@ -20,4 +20,5 @@ class Soccer():
         y = item.findtext("REFINE_WGS84_LOGT")
         sigun = item.findtext("SIGUN_NM")
         addr = item.findtext("REFINE_ROADNM_ADDR")
-        soccer_lists.append([name, sigun, area, material, x, y, addr])
+        if x != "":
+            soccer_lists.append([name, sigun, area, material, x, y, addr])

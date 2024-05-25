@@ -20,4 +20,5 @@ class BaseBall():
         y = item.findtext("REFINE_WGS84_LOGT")
         sigun = item.findtext("SIGUN_NM")
         addr = item.findtext("REFINE_ROADNM_ADDR")
-        baseball_lists.append([name, sigun, area, material, x, y, addr])
+        if x!="":
+            baseball_lists.append([name, sigun, area, material, x, y, addr])
