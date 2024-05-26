@@ -3,6 +3,9 @@ from tkinter import ttk
 from baseball import BaseBall
 from soccer import Soccer
 from tennis import Tennis
+from PIL import Image, ImageTk
+import requests
+from io import BytesIO
 
 class MainGUI():
     def __init__(self):
@@ -11,7 +14,7 @@ class MainGUI():
 
         self.window = Tk()
         self.window.title("Sport Finder")
-        self.window.geometry("800x800")
+        self.window.geometry("1200x800")  # 창 크기를 늘립니다.
 
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.window)
@@ -35,8 +38,6 @@ class MainGUI():
         self.tab_control.add(self.results_tab, text='검색 결과')
 
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
-        # self.info_canvas = Canvas(self.window, bg='white', width=300, height=250)
-        # self.info_canvas.place(x=350, y=58, width=300, height=250)
         self.text_widget = Text(self.window, width=40, height=20, state="disabled")
         self.text_widget.place(x=400, y=50)
 
@@ -64,18 +65,17 @@ class MainGUI():
         self.canvas.place(x=0, y=0, width=300, height=250)
         self.scrollbar.place(x=300, y=0, width=20, height=250)
 
-        # 선택된 정보를 표시할 프레임 (컨테이너 프레임 내부)
-        # self.selection_frame = Frame(self.container_frame, width=250)
-        # self.selection_frame.grid(row=0, column=2, sticky="nsew")
-
         # 선택된 정보를 표시할 탭 생성
         self.selection_tab = Frame(self.tab_control)
         self.tab_control.add(self.selection_tab, text='즐겨 찾기')
 
-        ##
         # 선택된 정보를 표시할 프레임 (선택 탭 내부)
         self.selection_frame = Frame(self.selection_tab, width=250)
         self.selection_frame.grid(row=0, column=0, sticky="nsew")
+
+        # 구글 맵을 표시할 라벨
+        self.map_label = Label(self.window)
+        self.map_label.place(x=300, y=350, width=400, height=400)
 
         # 검색 결과 목록 초기화
         self.search_results = []
@@ -117,11 +117,29 @@ class MainGUI():
                                         "경도: "+info[5]+"\n")
                 self.text_widget.config(state="disabled")
 
+                # 구글 맵을 표시
+                latitude = info[4]
+                longitude = info[5]
+                map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={latitude},{longitude}&zoom=15&size=400x400&key=AIzaSyCzFgc9OGnXckq1-JNhSCVGo9zIq1kSWcE"
+
+                if info[4] and info[5]:
+                    marker_url = f"&markers=color:red%7C{latitude},{longitude}"
+                map_url += marker_url
+
+                self.show_map(map_url)
 
         for widget in self.selection_frame.winfo_children():
             widget.destroy()
 
         Label(self.selection_frame, text=selection).pack()
 
+    def show_map(self, map_url):
+        response = requests.get(map_url)
+        img_data = response.content
+        img = Image.open(BytesIO(img_data))
+        img = img.resize((400, 400), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+        self.map_label.config(image=photo)
+        self.map_label.image = photo
 
 MainGUI()
