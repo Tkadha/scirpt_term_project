@@ -14,11 +14,13 @@ class MainGUI():
 
         self.window = Tk()
         self.window.title("Sport Finder")
-        self.window.geometry("1200x800")  # 창 크기를 늘립니다.
+        self.window.geometry("800x800")  # 창 크기를 늘립니다.
+        self.window.configure(bg='ivory')
 
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.window)
-        self.search_frame.place(x=0, y=0, width=400, height=400)
+        self.search_frame.configure(bg='ivory')
+        self.search_frame.place(x=10, y=0, width=400, height=400)
 
 
         # 검색창과 검색 버튼 설정
@@ -31,19 +33,21 @@ class MainGUI():
 
         # 탭 컨트롤 생성 및 배치
         self.tab_control = ttk.Notebook(self.window)
-        self.tab_control.place(x=0, y=28, width=320, height=150)
+        self.tab_control.place(x=10, y=28, width=320, height=150)
 
         # 검색 결과 탭 생성
         self.results_tab = Frame(self.tab_control)
         self.tab_control.add(self.results_tab, text='검색 결과')
 
+
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
         self.text_widget = Text(self.window, width=40, height=20, state="disabled")
-        self.text_widget.place(x=400, y=50)
+        self.text_widget.place(x=400, y=30)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
-        self.container_frame.place(x=0, y=50, width=320, height=250)
+        self.container_frame.configure(bg='ivory')
+        self.container_frame.place(x=10, y=50, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
         self.results_frame = Frame(self.container_frame)
@@ -59,7 +63,7 @@ class MainGUI():
                 scrollregion=self.canvas.bbox("all")
             )
         )
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.create_window((10, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         self.canvas.place(x=0, y=0, width=300, height=250)
@@ -75,10 +79,15 @@ class MainGUI():
 
         # 구글 맵을 표시할 라벨
         self.map_label = Label(self.window)
-        self.map_label.place(x=300, y=350, width=400, height=400)
+        self.map_label.configure(bg='ivory')
+        self.map_label.place(x=400, y=400, width=300, height=300)
 
         # 검색 결과 목록 초기화
         self.search_results = []
+
+        self.graph_canvas = Canvas(self.window, bg='white', width=300, height=200)
+        self.graph_canvas.place(x=10, y=400, width=300, height=300)
+
         self.window.mainloop()
 
     def search(self):
@@ -90,7 +99,7 @@ class MainGUI():
                 results.append(info[0])
 
         self.update_results(results)
-
+        self.update_graph(results)
     def update_results(self, results):
         # 기존 검색 결과 삭제
         for widget in self.scrollable_frame.winfo_children():
@@ -98,7 +107,7 @@ class MainGUI():
 
         # 새로운 검색 결과 표시, 최대 10개
         for result in results:
-            label = Label(self.scrollable_frame, text=result)
+            label = Label(self.scrollable_frame, text=result+"\t\t\t\t\t")
             label.bind("<Button-1>", lambda event, result=result: self.show_selection(result))
             label.pack(anchor='w')
 
@@ -141,5 +150,54 @@ class MainGUI():
         photo = ImageTk.PhotoImage(img)
         self.map_label.config(image=photo)
         self.map_label.image = photo
+
+    def update_graph(self, results):
+        # 축구장, 야구장, 테니스장 개수 계산
+        soccer_count = 0
+        baseball_count = 0
+        tennis_count = 0
+
+        for result in results:
+            for info in Soccer.soccer_lists:
+                if result == info[0]:
+                    soccer_count += 1
+            for info in BaseBall.baseball_lists:
+                if result == info[0]:
+                    baseball_count += 1
+            for info in Tennis.tennis_lists:
+                if result == info[0]:
+                    tennis_count += 1
+
+        # 캔버스 초기화
+        self.graph_canvas.delete("all")
+
+        # 막대 그래프 그리기
+        total = soccer_count + baseball_count + tennis_count
+        if total == 0:
+            return
+
+        max_height = 250
+        max_width = 200
+        bar_width = 50
+
+        soccer_height = max_height * (soccer_count / total)
+        baseball_height = max_height * (baseball_count / total)
+        tennis_height = max_height * (tennis_count / total)
+
+        self.graph_canvas.create_rectangle(40, max_height - soccer_height, 40 + bar_width, max_height, fill='green')
+        self.graph_canvas.create_rectangle(110, max_height - baseball_height, 110 + bar_width, max_height, fill='orange')
+        self.graph_canvas.create_rectangle(180, max_height - tennis_height, 180 + bar_width, max_height, fill='blue')
+
+        self.graph_canvas.create_text(40 + bar_width / 2, max_height - soccer_height - 10,
+                                      text=str(soccer_count), anchor='s')
+        self.graph_canvas.create_text(110 + bar_width / 2, max_height - baseball_height - 10,
+                                      text=str(baseball_count), anchor='s')
+        self.graph_canvas.create_text(180 + bar_width / 2, max_height - tennis_height - 10,
+                                      text=str(tennis_count), anchor='s')
+
+        self.graph_canvas.create_text(40 + bar_width / 2, max_height + 10, text='축구장', anchor='n')
+        self.graph_canvas.create_text(110 + bar_width / 2, max_height + 10, text='야구장', anchor='n')
+        self.graph_canvas.create_text(180 + bar_width / 2, max_height + 10, text='테니스장', anchor='n')
+
 
 MainGUI()
