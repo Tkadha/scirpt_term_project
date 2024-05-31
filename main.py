@@ -24,6 +24,8 @@ class MainGUI():
 
 
         # 검색창과 검색 버튼 설정
+        self.search_list=list()
+        self.select_info=[]
         self.search_var = StringVar()
         self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
         self.search_entry.place(x=0, y=0, width=300, height=25)
@@ -77,6 +79,15 @@ class MainGUI():
         self.selection_frame = Frame(self.selection_tab, width=250)
         self.selection_frame.grid(row=0, column=0, sticky="nsew")
 
+        # 즐겨찾기 목록 초기화
+        self.favorites = []
+
+        # 즐겨찾기 추가 버튼 생성
+        self.add_favorites_button_img = PhotoImage(file="image/star.png")
+        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img,command=self.add_to_favorites)
+        self.add_favorites_button.place(x=400, y=300, width=50, height=50)
+
+
         # 구글 맵을 표시할 라벨
         self.map_label = Label(self.window)
         self.map_label.configure(bg='ivory')
@@ -88,7 +99,39 @@ class MainGUI():
         self.graph_canvas = Canvas(self.window, bg='white', width=300, height=200)
         self.graph_canvas.place(x=10, y=400, width=300, height=300)
 
+        self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_selected)
+
         self.window.mainloop()
+
+    def on_tab_selected(self, event):
+        selected_tab = event.widget.tab(event.widget.select(), "text")
+        if selected_tab == '즐겨 찾기':
+            self.update_favorites()
+        if selected_tab == '검색 결과':
+            self.update_results(self.search_list)
+
+    def add_to_favorites(self):
+        # 선택된 정보를 즐겨찾기에 추가
+        if self.select_info not in self.favorites:
+            self.favorites.append(self.select_info)
+            return
+        else:
+            for i, favorite in enumerate(self.favorites):
+                if favorite[0] == self.select_info[0]:
+                    del self.favorites[i]
+                    self.update_favorites()
+                    break
+
+
+    def update_favorites(self):
+        # 즐겨찾기 목록 업데이트
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        for favorite in self.favorites:
+            label = Label(self.scrollable_frame, text=favorite[0]+"\t\t\t\t\t")
+            label.bind("<Button-1>", lambda event, result=favorite[0]: self.show_selection(result))
+            label.pack(anchor='w')
 
     def search(self):
         query = self.search_var.get()
@@ -98,6 +141,8 @@ class MainGUI():
             if query in info[1]:
                 results.append(info[0])
 
+        self.search_list= results
+        self.tab_control.select(self.results_tab)
         self.update_results(results)
         self.update_graph(results)
     def update_results(self, results):
@@ -106,15 +151,16 @@ class MainGUI():
             widget.destroy()
 
         # 새로운 검색 결과 표시, 최대 10개
-        for result in results:
-            label = Label(self.scrollable_frame, text=result+"\t\t\t\t\t")
-            label.bind("<Button-1>", lambda event, result=result: self.show_selection(result))
+        for res in results:
+            label = Label(self.scrollable_frame, text=res+"\t\t\t\t\t")
+            label.bind("<Button-1>", lambda event, result=res: self.show_selection(result))
             label.pack(anchor='w')
 
     def show_selection(self, selection):
         # 선택된 정보 표시
         for info in self.All_list:
             if selection == info[0]:
+                self.select_info = info
                 self.text_widget.config(state="normal")
                 self.text_widget.delete("1.0","end")
                 self.text_widget.insert("1.0","시설명: "+info[0]+"\n" +
