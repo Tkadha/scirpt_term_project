@@ -6,6 +6,8 @@ from tennis import Tennis
 from PIL import Image, ImageTk
 import requests
 from io import BytesIO
+import spam
+
 
 class MainGUI():
     def __init__(self):
@@ -223,12 +225,11 @@ class MainGUI():
             return
 
         max_height = 250
-        max_width = 200
         bar_width = 50
 
-        soccer_height = max_height * (soccer_count / total)
-        baseball_height = max_height * (baseball_count / total)
-        tennis_height = max_height * (tennis_count / total)
+        soccer_height = spam.barlen(soccer_count,total)
+        baseball_height = spam.barlen(baseball_count,total)
+        tennis_height = spam.barlen(tennis_count,total)
 
         self.graph_canvas.create_rectangle(40, max_height - soccer_height, 40 + bar_width, max_height, fill='green')
         self.graph_canvas.create_rectangle(110, max_height - baseball_height, 110 + bar_width, max_height, fill='orange')
