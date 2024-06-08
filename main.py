@@ -298,8 +298,9 @@ class MainGUI():
             self.window.destroy()
 
     def get_coordinates(self, address):
-        client_id = 'YOUR_CLIENT_ID'
-        client_secret = 'YOUR_CLIENT_SECRET'
+        client_id = 'gxp3zxbpf6'
+        client_secret = 'NOYVE8v4pDKxnF2rnisXhTgrkClON8ZEfQi0GSUG'
+
         url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query={address}"
         headers = {
             "X-NCP-APIGW-API-KEY-ID": client_id,
@@ -328,8 +329,8 @@ class MainGUI():
             return
 
         # 네이버 지도 API 키 설정
-        client_id = 'YOUR_CLIENT_ID'
-        client_secret = 'YOUR_CLIENT_SECRET'
+        client_id = 'gxp3zxbpf6'
+        client_secret = 'NOYVE8v4pDKxnF2rnisXhTgrkClON8ZEfQi0GSUG'
 
         # 경로 검색
         url = f"https://naveropenapi.apigw.ntruss.com/map-direction-15/v1/driving?start={start_x},{start_y}&goal={end_x},{end_y}&option=trafast"
