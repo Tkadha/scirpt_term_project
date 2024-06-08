@@ -7,27 +7,29 @@ from PIL import Image, ImageTk
 import requests
 from io import BytesIO
 import spam
-
+import teller
+import threading
 
 class MainGUI():
     def __init__(self):
-        self.All_list=BaseBall.baseball_lists+Soccer.soccer_lists+Tennis.tennis_lists
-        self.All_list=sorted(self.All_list,key=lambda x:x[0])
+        self.All_list = BaseBall.baseball_lists + Soccer.soccer_lists + Tennis.tennis_lists
+        self.All_list = sorted(self.All_list, key=lambda x: x[0])
 
         self.window = Tk()
         self.window.title("Sport Finder")
-        self.window.geometry("800x800")  # 창 크기를 늘립니다.
+        self.window.geometry("800x800")
         self.window.configure(bg='ivory')
+        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+        # 메인 탭 컨트롤 생성
 
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.window)
         self.search_frame.configure(bg='ivory')
         self.search_frame.place(x=10, y=0, width=400, height=400)
 
-
         # 검색창과 검색 버튼 설정
-        self.search_list=list()
-        self.select_info=[]
+        self.search_list = list()
+        self.select_info = []
         self.search_var = StringVar()
         self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
         self.search_entry.place(x=0, y=0, width=300, height=25)
@@ -42,7 +44,6 @@ class MainGUI():
         # 검색 결과 탭 생성
         self.results_tab = Frame(self.tab_control)
         self.tab_control.add(self.results_tab, text='검색 결과')
-
 
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
         self.text_widget = Text(self.window, width=40, height=20, state="disabled")
@@ -86,9 +87,8 @@ class MainGUI():
 
         # 즐겨찾기 추가 버튼 생성
         self.add_favorites_button_img = PhotoImage(file="image/star.png")
-        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img,command=self.add_to_favorites)
+        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img, command=self.add_to_favorites)
         self.add_favorites_button.place(x=400, y=300, width=50, height=50)
-
 
         # 구글 맵을 표시할 라벨
         self.map_label = Label(self.window)
@@ -103,7 +103,23 @@ class MainGUI():
 
         self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_selected)
 
+        self.bot=teller.SportFinderBot()
+        self.bot_thread_flag = threading.Event()
+        # 텔레그램 실행 버튼 생성
+        self.telegram_button_img = PhotoImage(file="image/telegram.png")
+        self.telegram_button = Button(self.window, image=self.telegram_button_img, command=self.telegram)
+        self.telegram_button.place(x=625, y=300, width=50, height=50)
+
         self.window.mainloop()
+
+
+    def telegram(self):
+        self.bot_thread_flag.set()
+        threading.Thread(target=self.run_bot).start()
+
+    def run_bot(self):
+        self.bot.run()
+        self.bot_thread_flag.clear()
 
     def on_tab_selected(self, event):
         selected_tab = event.widget.tab(event.widget.select(), "text")
@@ -116,37 +132,40 @@ class MainGUI():
         # 선택된 정보를 즐겨찾기에 추가
         if self.select_info not in self.favorites:
             self.favorites.append(self.select_info)
+            self.bot.add_bookmark(self.select_info)
             return
         else:
             for i, favorite in enumerate(self.favorites):
                 if favorite[0] == self.select_info[0]:
                     del self.favorites[i]
+                    self.bot.erase_bookmark(self.select_info)
                     self.update_favorites()
                     break
-
 
     def update_favorites(self):
         # 즐겨찾기 목록 업데이트
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
-
+        if not self.favorites:
+            return
         for favorite in self.favorites:
-            label = Label(self.scrollable_frame, text=favorite[0]+"\t\t\t\t\t")
+            label = Label(self.scrollable_frame, text=favorite[0] + "\t\t\t\t\t")
             label.bind("<Button-1>", lambda event, result=favorite[0]: self.show_selection(result))
             label.pack(anchor='w')
 
     def search(self):
         query = self.search_var.get()
 
-        results=list()
+        results = list()
         for info in self.All_list:
             if query in info[1]:
                 results.append(info[0])
 
-        self.search_list= results
+        self.search_list = results
         self.tab_control.select(self.results_tab)
         self.update_results(results)
         self.update_graph(results)
+
     def update_results(self, results):
         # 기존 검색 결과 삭제
         for widget in self.scrollable_frame.winfo_children():
@@ -154,7 +173,7 @@ class MainGUI():
 
         # 새로운 검색 결과 표시, 최대 10개
         for res in results:
-            label = Label(self.scrollable_frame, text=res+"\t\t\t\t\t")
+            label = Label(self.scrollable_frame, text=res + "\t\t\t\t\t")
             label.bind("<Button-1>", lambda event, result=res: self.show_selection(result))
             label.pack(anchor='w')
 
@@ -164,14 +183,14 @@ class MainGUI():
             if selection == info[0]:
                 self.select_info = info
                 self.text_widget.config(state="normal")
-                self.text_widget.delete("1.0","end")
-                self.text_widget.insert("1.0","시설명: "+info[0]+"\n" +
-                                        "지역: "+info[1]+"\n" +
-                                        "면적: "+info[2]+"\n" +
-                                        "바닥 재질: "+info[3]+"\n" +
+                self.text_widget.delete("1.0", "end")
+                self.text_widget.insert("1.0", "시설명: " + info[0] + "\n" +
+                                        "지역: " + info[1] + "\n" +
+                                        "면적: " + info[2] + "\n" +
+                                        "바닥 재질: " + info[3] + "\n" +
                                         "주소: " + info[6] + "\n" +
-                                        "위도: "+info[4]+"\n" +
-                                        "경도: "+info[5]+"\n")
+                                        "위도: " + info[4] + "\n" +
+                                        "경도: " + info[5] + "\n")
                 self.text_widget.config(state="disabled")
 
                 # 구글 맵을 표시
@@ -227,9 +246,9 @@ class MainGUI():
         max_height = 250
         bar_width = 50
 
-        soccer_height = spam.barlen(soccer_count,total)
-        baseball_height = spam.barlen(baseball_count,total)
-        tennis_height = spam.barlen(tennis_count,total)
+        soccer_height = spam.barlen(soccer_count, total)
+        baseball_height = spam.barlen(baseball_count, total)
+        tennis_height = spam.barlen(tennis_count, total)
 
         self.graph_canvas.create_rectangle(40, max_height - soccer_height, 40 + bar_width, max_height, fill='green')
         self.graph_canvas.create_rectangle(110, max_height - baseball_height, 110 + bar_width, max_height, fill='orange')
@@ -246,5 +265,11 @@ class MainGUI():
         self.graph_canvas.create_text(110 + bar_width / 2, max_height + 10, text='야구장', anchor='n')
         self.graph_canvas.create_text(180 + bar_width / 2, max_height + 10, text='테니스장', anchor='n')
 
-
+    def on_closing(self):
+        if self.bot_thread_flag.is_set():
+            self.bot_thread_flag.clear()
+            self.bot.running = False
+            self.window.destroy()
+        else:
+            self.window.destroy()
 MainGUI()
