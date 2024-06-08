@@ -17,29 +17,27 @@ class MainGUI():
 
         self.window = Tk()
         self.window.title("Sport Finder")
-        self.window.geometry("800x800")
+        self.window.geometry("800x900")  # 창 크기를 늘립니다.
         self.window.configure(bg='ivory')
-        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
-        # 메인 탭 컨트롤 생성
 
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.window)
         self.search_frame.configure(bg='ivory')
-        self.search_frame.place(x=10, y=0, width=400, height=400)
+        self.search_frame.place(x=10, y=10, width=400, height=50)
 
         # 검색창과 검색 버튼 설정
         self.search_list = list()
         self.select_info = []
         self.search_var = StringVar()
         self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
-        self.search_entry.place(x=0, y=0, width=300, height=25)
+        self.search_entry.grid(row=0, column=0, padx=5, pady=5)
 
         self.search_button = Button(self.search_frame, text='검색', command=self.search)
-        self.search_button.place(x=300, y=0, width=50, height=25)
+        self.search_button.grid(row=0, column=1, padx=5, pady=5)
 
         # 탭 컨트롤 생성 및 배치
         self.tab_control = ttk.Notebook(self.window)
-        self.tab_control.place(x=10, y=28, width=320, height=150)
+        self.tab_control.place(x=10, y=70, width=350, height=200)
 
         # 검색 결과 탭 생성
         self.results_tab = Frame(self.tab_control)
@@ -52,13 +50,13 @@ class MainGUI():
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
         self.container_frame = Frame(self.window)
         self.container_frame.configure(bg='ivory')
-        self.container_frame.place(x=10, y=50, width=320, height=250)
+        self.container_frame.place(x=10, y=280, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
         self.results_frame = Frame(self.container_frame)
         self.results_frame.place(x=0, y=0, width=320, height=250)
 
-        self.canvas = Canvas(self.results_frame, bg='white', width=350, height=225, scrollregion=(0, 0, 350, 225))
+        self.canvas = Canvas(self.results_frame, bg='white', width=300, height=225, scrollregion=(0, 0, 300, 225))
         self.scrollbar = Scrollbar(self.results_frame, orient='vertical', command=self.canvas.yview)
         self.scrollable_frame = Frame(self.canvas)
 
@@ -68,7 +66,7 @@ class MainGUI():
                 scrollregion=self.canvas.bbox("all")
             )
         )
-        self.canvas.create_window((10, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         self.canvas.place(x=0, y=0, width=300, height=250)
@@ -87,10 +85,11 @@ class MainGUI():
 
         # 즐겨찾기 추가 버튼 생성
         self.add_favorites_button_img = PhotoImage(file="image/star.png")
-        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img, command=self.add_to_favorites)
+        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img,
+                                           command=self.add_to_favorites)
         self.add_favorites_button.place(x=400, y=300, width=50, height=50)
 
-        # 구글 맵을 표시할 라벨
+        # 네이버 맵을 표시할 라벨
         self.map_label = Label(self.window)
         self.map_label.configure(bg='ivory')
         self.map_label.place(x=400, y=400, width=300, height=300)
@@ -99,11 +98,36 @@ class MainGUI():
         self.search_results = []
 
         self.graph_canvas = Canvas(self.window, bg='white', width=300, height=200)
-        self.graph_canvas.place(x=10, y=400, width=300, height=300)
+        self.graph_canvas.place(x=10, y=550, width=300, height=300)
+
+        # 길찾기 탭 추가
+        self.directions_tab = Frame(self.tab_control)
+        self.tab_control.add(self.directions_tab, text='길 찾기')
+
+        # 출발지와 도착지를 입력받는 프레임 생성
+        self.directions_frame = Frame(self.directions_tab)
+        self.directions_frame.place(x=10, y=10, width=300, height=200)
+
+        Label(self.directions_frame, text="출발지:").grid(row=0, column=0, padx=5, pady=5)
+        self.start_var = StringVar()
+        self.start_entry = Entry(self.directions_frame, textvariable=self.start_var, width=25)
+        self.start_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        Label(self.directions_frame, text="도착지:").grid(row=1, column=0, padx=5, pady=5)
+        self.end_var = StringVar()
+        self.end_entry = Entry(self.directions_frame, textvariable=self.end_var, width=25)
+        self.end_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        self.find_directions_button = Button(self.directions_frame, text='길찾기', command=self.find_directions)
+        self.find_directions_button.grid(row=2, columnspan=2, pady=10)
+
+        # 길찾기 결과를 표시할 텍스트 위젯
+        self.directions_text = Text(self.directions_frame, width=35, height=10, state="disabled")
+        self.directions_text.grid(row=3, columnspan=2, padx=5, pady=5)
 
         self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_selected)
 
-        self.bot=teller.SportFinderBot()
+        self.bot = teller.SportFinderBot()
         self.bot_thread_flag = threading.Event()
         # 텔레그램 실행 버튼 생성
         self.telegram_button_img = PhotoImage(file="image/telegram.png")
@@ -272,4 +296,66 @@ class MainGUI():
             self.window.destroy()
         else:
             self.window.destroy()
+
+    def get_coordinates(self, address):
+        client_id = 'YOUR_CLIENT_ID'
+        client_secret = 'YOUR_CLIENT_SECRET'
+        url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query={address}"
+        headers = {
+            "X-NCP-APIGW-API-KEY-ID": client_id,
+            "X-NCP-APIGW-API-KEY": client_secret
+        }
+        response = requests.get(url, headers=headers)
+        result = response.json()
+        if "addresses" in result and len(result["addresses"]) > 0:
+            return result["addresses"][0]["x"], result["addresses"][0]["y"]
+        else:
+            return None, None
+
+    def find_directions(self):
+        start_location = self.start_var.get()
+        end_location = self.end_var.get()
+
+        # 출발지와 도착지의 좌표를 얻기
+        start_x, start_y = self.get_coordinates(start_location)
+        end_x, end_y = self.get_coordinates(end_location)
+
+        if start_x is None or end_x is None:
+            self.directions_text.config(state="normal")
+            self.directions_text.delete("1.0", "end")
+            self.directions_text.insert("end", "경로를 찾을 수 없습니다. 출발지 또는 도착지 주소를 확인하세요.\n")
+            self.directions_text.config(state="disabled")
+            return
+
+        # 네이버 지도 API 키 설정
+        client_id = 'YOUR_CLIENT_ID'
+        client_secret = 'YOUR_CLIENT_SECRET'
+
+        # 경로 검색
+        url = f"https://naveropenapi.apigw.ntruss.com/map-direction-15/v1/driving?start={start_x},{start_y}&goal={end_x},{end_y}&option=trafast"
+        headers = {
+            "X-NCP-APIGW-API-KEY-ID": client_id,
+            "X-NCP-APIGW-API-KEY": client_secret
+        }
+
+        response = requests.get(url, headers=headers)
+        directions_result = response.json()
+
+        if "route" in directions_result:
+            route = directions_result['route']['trafast'][0]
+            steps = route['guide']
+            self.directions_text.config(state="normal")
+            self.directions_text.delete("1.0", "end")
+            for step in steps:
+                self.directions_text.insert("end", step['instructions'] + "\n")
+            self.directions_text.config(state="disabled")
+        else:
+            self.directions_text.config(state="normal")
+            self.directions_text.delete("1.0", "end")
+            self.directions_text.insert("end", "경로를 찾을 수 없습니다.\n")
+            self.directions_text.insert("end", f"출발지: {start_location}\n")
+            self.directions_text.insert("end", f"도착지: {end_location}\n")
+            self.directions_text.insert("end", "API 응답: {}\n".format(directions_result))
+            self.directions_text.config(state="disabled")
+
 MainGUI()
