@@ -3,7 +3,7 @@ from tkinter import ttk
 from baseball import BaseBall
 from soccer import Soccer
 from tennis import Tennis
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk,ImageSequence
 import requests
 from io import BytesIO
 import spam
@@ -75,6 +75,26 @@ class MainGUI():
         self.directions_text = Text(self.second_tab, wrap=WORD, width=50, height=20)
         self.directions_text.place(x=10, y=120)
 
+        self.SC_image = Image.open("image/soccer.gif")
+        self.SC_frames = [ImageTk.PhotoImage(frame) for frame in ImageSequence.Iterator(self.SC_image)]
+        self.SC_label = Label(self.second_tab)
+        self.SC_label.place(x=400, y=10)
+        self.SC_animate(0)
+
+        self.BB_image = Image.open("image/baseball.gif")
+        self.BB_frames = [ImageTk.PhotoImage(frame) for frame in ImageSequence.Iterator(self.BB_image)]
+        self.BB_label = Label(self.second_tab)
+        self.BB_label.place(x=400, y=400)
+        self.BB_animate(0)
+    def SC_animate(self, frame_num):
+        self.SC_label.config(image=self.SC_frames[frame_num])
+        frame_num = (frame_num + 1) % len(self.SC_frames)
+        self.second_tab.after(50, self.SC_animate, frame_num)
+
+    def BB_animate(self, frame_num):
+        self.BB_label.config(image=self.BB_frames[frame_num])
+        frame_num = (frame_num + 1) % len(self.BB_frames)
+        self.second_tab.after(50, self.BB_animate, frame_num)
     def setup_first_tab(self):
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
         self.search_frame = Frame(self.first_tab)
