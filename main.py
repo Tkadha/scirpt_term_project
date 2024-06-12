@@ -9,6 +9,9 @@ from io import BytesIO
 import spam
 import teller
 import threading
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class MainGUI():
     def __init__(self):
@@ -129,12 +132,45 @@ class MainGUI():
 
         self.bot = teller.SportFinderBot()
         self.bot_thread_flag = threading.Event()
+
         # 텔레그램 실행 버튼 생성
         self.telegram_button_img = PhotoImage(file="image/telegram.png")
         self.telegram_button = Button(self.window, image=self.telegram_button_img, command=self.telegram)
         self.telegram_button.place(x=625, y=300, width=50, height=50)
 
+        # Gmail 실행 버튼 생성
+        self.email_button_img = PhotoImage(file="image/gmail.png")
+        self.email_button = Button(self.window, image=self.email_button_img, command=self.send_email)
+        self.email_button.place(x=512.5, y=300, width=50, height=50)
+
         self.window.mainloop()
+
+    def send_email(self):
+        sender_email = "seanseol05@gmail.com"
+        sender_password = "wppt owjf mggb ifdr"
+        receiver_email = "seanseol05@gmail.com"
+        subject = "Sport Finder 즐겨찾기"
+        body = "즐겨찾기 목록:\n\n" + "\n".join([f"{item[0]} - {item[1]} - {item[2]} - {item[3]} - {item[4]} - {item[5]} - {item[6]}" for item in self.favorites])
+
+        msg = MIMEMultipart()
+
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            text = msg.as_string()
+            server.sendmail(sender_email, receiver_email, text)
+            server.quit()
+
+            print("이메일이 성공적으로 발송되었습니다.")
+        except Exception as e:
+            print(f"이메일 발송에 실패하였습니다: {str(e)}")
 
 
     def telegram(self):
