@@ -12,7 +12,6 @@ import threading
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 class MainGUI():
     def __init__(self):
         self.All_list = BaseBall.baseball_lists + Soccer.soccer_lists + Tennis.tennis_lists
@@ -20,11 +19,65 @@ class MainGUI():
 
         self.window = Tk()
         self.window.title("Sport Finder")
-        self.window.geometry("800x900")  # 창 크기를 늘립니다.
+        self.window.geometry("800x800")  # 창 크기를 늘립니다.
         self.window.configure(bg='ivory')
 
+        # Create the tab control
+        self.tab_control = ttk.Notebook(self.window)
+        self.tab_control.place(x=10, y=10, width=780, height=780)  # Adjust the size and position as needed
+
+        # First tab with all the existing content
+        self.first_tab = Frame(self.tab_control)
+        self.first_tab.configure(bg='ivory')
+        self.tab_control.add(self.first_tab, text='스포츠 파인더')
+
+        # Second tab which is an empty frame
+        self.second_tab = Frame(self.tab_control)
+        self.second_tab.configure(bg='ivory')
+        self.tab_control.add(self.second_tab, text='길찾기')
+
+        # Move the existing content to the first tab
+        self.setup_first_tab()
+        self.setup_second_tab()
+        self.bot = teller.SportFinderBot()
+        self.bot_thread_flag = threading.Event()
+        # 텔레그램 실행 버튼 생성
+        self.telegram_button_img = PhotoImage(file="image/telegram.png")
+        self.telegram_button = Button(self.first_tab, image=self.telegram_button_img, command=self.telegram)
+        self.telegram_button.place(x=625, y=270, width=50, height=50)
+
+        # Gmail 실행 버튼 생성
+        self.email_button_img = PhotoImage(file="image/gmail.png")
+        self.email_button = Button(self.first_tab, image=self.email_button_img, command=self.send_email)
+        self.email_button.place(x=512.5, y=270, width=50, height=50)
+
+        self.window.mainloop()
+
+    def setup_second_tab(self):
+        # Frame for inputting start and end locations
+        directions_frame = Frame(self.second_tab)
+        directions_frame.place(x=10, y=10, width=350, height=100)
+
+        # Labels and entry widgets for start and end locations
+        Label(directions_frame, text="출발지: ").grid(row=0, column=0, padx=5, pady=5)
+        self.start_var = StringVar()
+        Entry(directions_frame, textvariable=self.start_var, width=30).grid(row=0, column=1, padx=5, pady=5)
+
+        Label(directions_frame, text="도착지: ").grid(row=1, column=0, padx=5, pady=5)
+        self.end_var = StringVar()
+        Entry(directions_frame, textvariable=self.end_var, width=30).grid(row=1, column=1, padx=5, pady=5)
+
+        # Button to find directions
+        find_directions_button = Button(directions_frame, text="길 찾기", command=self.find_directions)
+        find_directions_button.grid(row=2, columnspan=2, padx=5, pady=5)
+
+        # Text widget to display directions
+        self.directions_text = Text(self.second_tab, wrap=WORD, width=50, height=20)
+        self.directions_text.place(x=10, y=120)
+
+    def setup_first_tab(self):
         # 검색창과 검색 버튼을 위한 프레임 생성 및 배치
-        self.search_frame = Frame(self.window)
+        self.search_frame = Frame(self.first_tab)
         self.search_frame.configure(bg='ivory')
         self.search_frame.place(x=10, y=10, width=400, height=50)
 
@@ -32,28 +85,20 @@ class MainGUI():
         self.search_list = list()
         self.select_info = []
         self.search_var = StringVar()
-        self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=25)
+        self.search_entry = Entry(self.search_frame, textvariable=self.search_var, width=30)
         self.search_entry.grid(row=0, column=0, padx=5, pady=5)
 
         self.search_button = Button(self.search_frame, text='검색', command=self.search)
         self.search_button.grid(row=0, column=1, padx=5, pady=5)
 
-        # 탭 컨트롤 생성 및 배치
-        self.tab_control = ttk.Notebook(self.window)
-        self.tab_control.place(x=10, y=70, width=350, height=200)
-
-        # 검색 결과 탭 생성
-        self.results_tab = Frame(self.tab_control)
-        self.tab_control.add(self.results_tab, text='검색 결과')
-
         # 선택된 정보를 표시할 캔버스 (검색창 오른쪽)
-        self.text_widget = Text(self.window, width=40, height=20, state="disabled")
-        self.text_widget.place(x=400, y=30)
+        self.text_widget = Text(self.first_tab, width=40, height=16, state="disabled")
+        self.text_widget.place(x=400, y=50)
 
         # 검색 결과 및 선택 정보를 담을 컨테이너 프레임
-        self.container_frame = Frame(self.window)
+        self.container_frame = Frame(self.first_tab)
         self.container_frame.configure(bg='ivory')
-        self.container_frame.place(x=10, y=280, width=320, height=250)
+        self.container_frame.place(x=10, y=70, width=320, height=250)
 
         # 검색 결과 프레임과 스크롤바 설정 (컨테이너 프레임 내부)
         self.results_frame = Frame(self.container_frame)
@@ -75,9 +120,34 @@ class MainGUI():
         self.canvas.place(x=0, y=0, width=300, height=250)
         self.scrollbar.place(x=300, y=0, width=20, height=250)
 
+        # 즐겨찾기 추가 버튼 생성
+        self.add_favorites_button_img = PhotoImage(file="image/star.png")
+        self.add_favorites_button = Button(self.first_tab, image=self.add_favorites_button_img,
+                                           command=self.add_to_favorites)
+        self.add_favorites_button.place(x=400, y=270, width=50, height=50)
+
+        # 네이버 맵을 표시할 라벨
+        self.map_label = Label(self.first_tab)
+        self.map_label.configure(bg='ivory')
+        self.map_label.place(x=400, y=400, width=300, height=300)
+
+        # 검색 결과 목록 초기화
+        self.search_results = []
+
+        self.graph_canvas = Canvas(self.first_tab, bg='white', width=300, height=200)
+        self.graph_canvas.place(x=10, y=400, width=300, height=300)
+
+        # 탭 컨트롤 생성 및 배치
+        self.sub_tab_control = ttk.Notebook(self.first_tab)
+        self.sub_tab_control.place(x=10, y=50, width=320, height=20)
+
+        # 검색 결과 탭 생성
+        self.results_tab = Frame(self.sub_tab_control)
+        self.sub_tab_control.add(self.results_tab, text='검색 결과')
+
         # 선택된 정보를 표시할 탭 생성
-        self.selection_tab = Frame(self.tab_control)
-        self.tab_control.add(self.selection_tab, text='즐겨 찾기')
+        self.selection_tab = Frame(self.sub_tab_control)
+        self.sub_tab_control.add(self.selection_tab, text='즐겨 찾기')
 
         # 선택된 정보를 표시할 프레임 (선택 탭 내부)
         self.selection_frame = Frame(self.selection_tab, width=250)
@@ -86,71 +156,17 @@ class MainGUI():
         # 즐겨찾기 목록 초기화
         self.favorites = []
 
-        # 즐겨찾기 추가 버튼 생성
-        self.add_favorites_button_img = PhotoImage(file="image/star.png")
-        self.add_favorites_button = Button(self.window, image=self.add_favorites_button_img,
-                                           command=self.add_to_favorites)
-        self.add_favorites_button.place(x=400, y=300, width=50, height=50)
-
-        # 네이버 맵을 표시할 라벨
-        self.map_label = Label(self.window)
-        self.map_label.configure(bg='ivory')
-        self.map_label.place(x=400, y=400, width=300, height=300)
-
-        # 검색 결과 목록 초기화
-        self.search_results = []
-
-        self.graph_canvas = Canvas(self.window, bg='white', width=300, height=200)
-        self.graph_canvas.place(x=10, y=550, width=300, height=300)
-
-        # 길찾기 탭 추가
-        self.directions_tab = Frame(self.tab_control)
-        self.tab_control.add(self.directions_tab, text='길 찾기')
-
-        # 출발지와 도착지를 입력받는 프레임 생성
-        self.directions_frame = Frame(self.directions_tab)
-        self.directions_frame.place(x=10, y=10, width=300, height=200)
-
-        Label(self.directions_frame, text="출발지:").grid(row=0, column=0, padx=5, pady=5)
-        self.start_var = StringVar()
-        self.start_entry = Entry(self.directions_frame, textvariable=self.start_var, width=25)
-        self.start_entry.grid(row=0, column=1, padx=5, pady=5)
-
-        Label(self.directions_frame, text="도착지:").grid(row=1, column=0, padx=5, pady=5)
-        self.end_var = StringVar()
-        self.end_entry = Entry(self.directions_frame, textvariable=self.end_var, width=25)
-        self.end_entry.grid(row=1, column=1, padx=5, pady=5)
-
-        self.find_directions_button = Button(self.directions_frame, text='길찾기', command=self.find_directions)
-        self.find_directions_button.grid(row=2, columnspan=2, pady=10)
-
-        # 길찾기 결과를 표시할 텍스트 위젯
-        self.directions_text = Text(self.directions_frame, width=35, height=10, state="disabled")
-        self.directions_text.grid(row=3, columnspan=2, padx=5, pady=5)
-
-        self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_selected)
-
-        self.bot = teller.SportFinderBot()
-        self.bot_thread_flag = threading.Event()
-
-        # 텔레그램 실행 버튼 생성
-        self.telegram_button_img = PhotoImage(file="image/telegram.png")
-        self.telegram_button = Button(self.window, image=self.telegram_button_img, command=self.telegram)
-        self.telegram_button.place(x=625, y=300, width=50, height=50)
-
-        # Gmail 실행 버튼 생성
-        self.email_button_img = PhotoImage(file="image/gmail.png")
-        self.email_button = Button(self.window, image=self.email_button_img, command=self.send_email)
-        self.email_button.place(x=512.5, y=300, width=50, height=50)
-
-        self.window.mainloop()
+        # Event binding
+        self.sub_tab_control.bind("<<NotebookTabChanged>>", self.on_tab_selected)
 
     def send_email(self):
         sender_email = "seanseol05@gmail.com"
         sender_password = "wppt owjf mggb ifdr"
         receiver_email = "seanseol05@gmail.com"
         subject = "Sport Finder 즐겨찾기"
-        body = "즐겨찾기 목록:\n\n" + "\n".join([f"{item[0]} - {item[1]} - {item[2]} - {item[3]} - {item[4]} - {item[5]} - {item[6]}" for item in self.favorites])
+        body = "즐겨찾기 목록:\n\n" + "\n".join(
+            [f"{item[0]} - {item[1]} - {item[2]} - {item[3]} - {item[4]} - {item[5]} - {item[6]}" for item in
+             self.favorites])
 
         msg = MIMEMultipart()
 
@@ -171,8 +187,6 @@ class MainGUI():
             print("이메일이 성공적으로 발송되었습니다.")
         except Exception as e:
             print(f"이메일 발송에 실패하였습니다: {str(e)}")
-
-
     def telegram(self):
         self.bot_thread_flag.set()
         threading.Thread(target=self.run_bot).start()
@@ -185,8 +199,10 @@ class MainGUI():
         selected_tab = event.widget.tab(event.widget.select(), "text")
         if selected_tab == '즐겨 찾기':
             self.update_favorites()
+            self.canvas.yview_moveto(0)
         if selected_tab == '검색 결과':
             self.update_results(self.search_list)
+            self.canvas.yview_moveto(0)
 
     def add_to_favorites(self):
         # 선택된 정보를 즐겨찾기에 추가
@@ -222,7 +238,7 @@ class MainGUI():
                 results.append(info[0])
 
         self.search_list = results
-        self.tab_control.select(self.results_tab)
+        self.sub_tab_control.select(self.results_tab)
         self.update_results(results)
         self.update_graph(results)
 
